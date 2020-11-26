@@ -1,0 +1,65 @@
+%Kenzie Friesen
+%May 7, 2020
+%Variable Normalization to 100 points using linspace function
+
+
+%%%%
+
+clear all; clc
+
+%%%%
+
+Data = dir('*.xls'); %Read in data
+numFiles = length(Data); %Find number of data files
+fileMaster = char({Data.name}); %Find order of output
+
+%%%%
+
+%create master matrix to drop final data
+normalized_var = []; 
+
+%%%%
+
+f = 1; %file
+p = 1; %participant
+v = 1; %counter
+
+%%%%
+
+for v = 1:100 %Do this for each file 
+     filename = fileMaster(f, :); %Retrieves whole (:) file name for which you are working on
+     num = readmatrix(filename); %Separates number and text values within a file
+      currentTrial = num; %Current trial we are going to do work on is using only number data
+      [rowsTrial, columnsTrial] = size(currentTrial); %Finds the  # of rows, columns in the trial we are working on "currentTrial"
+      currentTrial = currentTrial(8:(rowsTrial), [1:columnsTrial-2]); %We will only be using rows from 8 down, and columns 1 and 2
+      [rowsTrial, columnsTrial] = size(currentTrial); %Re-sizes the currentTrial based on the row above specifications
+end
+
+
+%create range 0-100
+range_sample = linspace(0, 101, length(currentTrial)); 
+
+%new length of data
+new_length = 0:100; 
+
+%noramlize sample #
+normed_samp = spline(range_sample, currentTrial(:,1), new_length);
+
+%normalize variable values
+normed_var = spline(range_sample, currentTrial(:,2), new_length); 
+
+%transpose
+normed_var = normed_var'; 
+
+%transpose
+normed_samp = normed_samp';
+
+%drop first column "Sample #" into master 
+normalized_var(:,1) = normed_samp; 
+
+%drop second column "variable data" into master 
+normalized_var(:,2) = normed_var; 
+
+%plot normalized variable
+plot(normalized_var(:,2)); 
+
