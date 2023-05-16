@@ -1,0 +1,18 @@
+function [Sub1P1_100] = whole_norm100(SubP_VEMdata,SubPdata)
+
+% Function used to normalize data to 101 data points between event mark #1 and #5
+% SubP_VEMdata is the column of data that contains event marks (denoted as ones)
+% SubPdata is the data that is being normalized to 101 points
+
+EventsSub1P1=find(SubP_VEMdata == 1);
+
+% Then find the size between EM1 and 5
+SizeE1E5=EventsSub1P1(5)-EventsSub1P1(1);
+
+% Then using the linspace function I can evenly distribute each column of data
+A=round(linspace(EventsSub1P1(1),EventsSub1P1(5),101));
+
+% Do this for each column and place into new array
+Sub1P1_100=SubPdata(A,:);
+
+end
