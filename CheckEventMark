@@ -1,0 +1,62 @@
+%% Check Event Mark Placement
+
+% Author: Kenzie Friesen
+% Date: August 3, 2020
+% Purpose: To verify that there are 5 EMs and that "Follow-through" is 24
+% frames after "Ball Release"
+% Event Mark is in column 71
+
+clear all; clc;
+Data = dir('*.txt'); %Read in data
+numFiles = length(Data); %Find number of data files
+fileMaster = char({Data.name}); %Find order of output
+
+% Alter number of events
+numEvents = 5; %number of events
+
+% Needed for loop
+master = []; %Creating master array for final output excel spreadsheet
+f = 1; %file
+p = 1; %participant
+rowHold = numEvents + 1; %creating a rows of space
+numParticipants = (numFiles)/3; % numParticipants based on how many files are in current folder divided by number of files per participant
+j = 1;
+d = 1;
+
+%%%%
+
+for f = 1:numFiles
+     filename = fileMaster(f, :); %Retrieves whole (:) file name for which you are working on
+     num = readtable(filename); %Separates number and text values within a file
+      currentTrial = num; %Current trial we are going to do work on is using only number data
+      [rowsTrial, columnsTrial] = size(currentTrial); %Finds the  # of rows, columns in the trial we are working on "currentTrial"
+      currentTrial = currentTrial(1:rowsTrial, 1:71); 
+      [rowsTrial, columnsTrial] = size(currentTrial); %Re-sizes the currentTrial based on the row above specifications
+      
+% Needed to find events
+      rowNum = 1; %A coutner used to let us know where we are in the matrix
+      variableData = zeros(rowHold,71); %It is a temporary matrix for each event. Adds zeros to the matrix "variableData"
+      i = 1; %Counter variable for the next while statement
+      currentTrial = table2array(currentTrial);
+      
+%Find events
+ while i < rowsTrial %repeat for every row of data
+                if currentTrial(i, 71) == 1 %Using 3 bc thats the # of columns we have 
+                    variableData(rowNum, :) = currentTrial(i, :); %Creating variableData using all rows of our datasheet (correctedEMG)
+                    rowNum = rowNum + 1; %repeat for the next row
+                    i = i + 1; 
+                end
+                if currentTrial(i, 71) ~= 1 %if correctedEMG doesn't equal 1
+                    i = i + 1; %just move onto the next row of data
+                end
+ end
+
+ %create master full of event marks
+ master(j:(j+5),2:72) = variableData(:,:);
+ master(j:j+5) = f;
+ 
+ 
+ j = j+6;
+ f = f +1; %Repeat for the next file
+ 
+end
