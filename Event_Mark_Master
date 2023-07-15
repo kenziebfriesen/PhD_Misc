@@ -1,0 +1,157 @@
+%% Create Master with data at each event mark
+
+% Author: Kenzie Friesen
+% Date: August 28, 2020
+% Purpose: To create a master that: 1) averages 3 trials, 2)holds data at each event mark from each participant
+
+clear all; clc;
+Data = dir('*.txt'); %Read in data
+numFiles = length(Data); %Find number of data files
+fileMaster = char({Data.name}); %Find order of output
+
+
+%%%%
+
+numEvents = 5; %number of events
+
+%%%%
+
+master = []; %Creating master array for final output excel spreadsheet
+masterDem = [];
+
+normWholemaster = [];
+normPropmaster = [];
+normFC2BRmaster = [];
+normFC2FTmaster = [];
+normOff2Contmaster = [];
+normPropmaster_GRFx = [];
+normPropmaster_GRFy = [];
+normPropmaster_GRFz = [];
+normPropmaster_GRFnet = [];
+peaksMax = [];
+peaksMin = [];
+
+
+f = 1; %file
+p = 1; %participant
+rowHold = numEvents + 1; %creating a rows of space
+numParticipants = (numFiles)/3; % numParticipants based on how many files are in current folder divided by number of files per participant
+j = 1;
+d = 1;
+w = 1;
+pem = 1;
+
+
+%%%%
+
+for f = 1:numFiles
+     filename = fileMaster(f, :); %Retrieves whole (:) file name for which you are working on
+    
+     opts = detectImportOptions(filename);
+     opts.DataLines = [7,8];
+     opts.ExtraColumnsRule = "ignore";
+     opts.EmptyLineRule = "skip";
+     dem = readtable(filename, opts);
+     dem = table2array(dem);
+     masterDem(f, 1) = dem(1,1);
+     masterDem(f, 2) = dem(2,1);
+     clear opts
+     
+     currentTrial = readtable(filename);
+     [rowsTrial, columnsTrial] = size(currentTrial); %Finds the  # of rows, columns in the trial we are working on "currentTrial"
+     currentTrial = currentTrial(1:rowsTrial, 1:71); 
+     [rowsTrial, columnsTrial] = size(currentTrial); %Re-sizes the currentTrial based on the row above specifications
+
+% Needed to find events
+      rowNum = 1; %A coutner used to let us know where we are in the matrix
+      variableData = zeros(rowHold, 71); %It is a temporary matrix for each event. Adds zeros to the matrix "variableData"
+      i = 1; %Counter variable for the next while statement
+     
+  currentTrial = table2array(currentTrial);
+
+% % Add normed variables to end of currentTrial
+% KineticsNorm = currentTrial(:,44:52)./(masterDem(f,1)*9.807);
+% KineticsNorm2 = currentTrial(:,53:61)./((masterDem(f,1)*9.807)*masterDem(f,2));
+% GRFNorm1 = currentTrial(:,67:70)./(masterDem(f,1)*9.807);
+% GRFNorm2 = (GRFNorm1(:,1:3)*(-1));
+% GRFNorm = [GRFNorm2 GRFNorm1(:,4)]
+% %I have normalized all 4 GRF to body weight and have flipped GRF x y z to
+% %be GRF and not human force on FP
+% KineticsNorm = array2table(KineticsNorm,'VariableNames',{'TA_Shoulder_Force_CD_normBW','TA_Shoulder_Force_X_normBW','TA_Shoulder_Force_Y_normBW','TA_Shoulder_Force_Z_normBW','TA_Shoulder_Force_Net_normBW','TA_Elbow_Force_Z_normBW','TA_Elbow_Force_Y_normBW','TA_Elbow_Force_X_normBW','TA_Elbow_Force_Net_normBW'});
+% KineticsNorm2 = array2table(KineticsNorm2, 'VariableNames', {'TA_Shoulder_Moment_X_normBWH','TA_Shoulder_Moment_Y_normBWH','TA_Shoulder_Moment_Z_normBWH','TA_Shoulder_Moment_CD_normBWH','TA_Shoulder_Moment_Net_normBWH','TA_Elbow_Moment_X_normBWH','TA_Elbow_Moment_Y_normBWH','TA_Elbow_Moment_Z_normBWH','TA_Elbow_Moment_Net_normBWH'});
+% GRFNorm = array2table(GRFNorm, 'VariableNames',{'GRFx_normBW','GRFy_normBW','GRFz_normBW','GRFnet_normBW'});
+% currentTrial = array2table(currentTrial, 'VariableNames', {'Sample #','Biceps_RawVoltage','Deltoid_RawVoltage','SA_RawVoltage','PecMaj_RawVoltage','SGMed_RawVoltage','SGMax_RawVoltage','PGMed_RawVoltage','PGMax_RawVoltage','TrunkFlexion','TrunkLateralFlexion','TrunkRotation','TA_PlaneOfElev','TA_Elevation','TA_AxialRotation','TA_ElbowFlexion','TA_ElbowValgus','TA_ElbowPronationSupination','GA_PlaneOfElev','GA_Elevation','GA_AxialRotation','GA_ElbowFlexion','GA_ElbowValgus','GA_ElbowPronationSupination','PelvicAnteriorTilt','PelvicLateralTilt','PelvicRotation','P_KneeFlexion','S_KneeFlexion','P_HipFlexion','S_HipFlexion','P_HipAbduction','S_HipAbduction','P_HipRotation','S_HipRotation','P_neutralHipFlexion','S_neutralHipFlexion','P_neutralHipAbduction','S_neutralHipAbduction','P_neutralHipRotation','S_neutralHipRotation','TA_NeutralElbowValgus','GA_NeutralElbowValgus', 'TA_Shoulder_Force_CD','TA_Shoulder_Force_X','TA_Shoulder_Force_Y','TA_Shoulder_Force_Z','TA_Shoulder_Force_Net','TA_Elbow_Force_X','TA_Elbow_Force_Y','TA_Elbow_Force_Z','TA_Elbow_Force_Net','TA_Shoulder_Moment_CD','TA_Shoulder_Moment_X','TA_Shoulder_Moment_Y','TA_Shoulder_Moment_Z','TA_Shoulder_Moment_Net','TA_Elbow_Moment_X','TA_Elbow_Moment_Y','TA_Elbow_Moment_Z','TA_Elbow_Moment_Net','Sacrum_Ang_Vel','Thorax_Ang_Vel','TA_UpperArm_Ang_Vel','TA_Forearm_Ang_Vel','TA_Hand_Ang_Vel','GRFx','GRFy','GRFz','GRFnet','VirtualEventMark'});
+% BMnormData = [currentTrial KineticsNorm KineticsNorm2 GRFNorm];
+% clear KineticsNorm KineticsNorm2 GRFNorm
+%  
+% BMnormData = table2array(BMnormData);
+
+%% Find events
+ while i < rowsTrial %repeat for every row of data
+                if currentTrial(i, 71) == 1 %Using 3 bc thats the # of columns we have 
+                    variableData(rowNum, :) = currentTrial(i, :); %Creating variableData using all rows of our datasheet (correctedEMG)
+                    rowNum = rowNum + 1; %repeat for the next row
+                    i = i + 1; 
+                end
+                if currentTrial(i, 71) ~= 1 %if correctedEMG doesn't equal 1
+                    i = i + 1; %just move onto the next row of data
+                end
+ end
+
+ 
+ 
+ %Place EM data into a master to contain each participants data
+ master(j:(j+5),1:71) = variableData(:,:);
+ master(j:j+5) = f;
+ 
+ %Create a master for each event mark. One trial per participant = one row.
+ masterEM(p,1:71) = master(pem,1:71);
+ masterEM(p,72:142) = master(pem+1,1:71);
+ masterEM(p,143:213) = master(pem+2,1:71);
+ masterEM(p,214:284) = master(pem+3,1:71);
+ masterEM(p,285:355) = master(pem+4,1:71);
+
+
+%FindEvents
+[EventsCurrentTrial] = findEvents(currentTrial(:,71));
+
+ %% Find peaks
+ peaksMax(f,:) = max(currentTrial((EventsCurrentTrial(2,1):EventsCurrentTrial(4,1)),:));
+ peaksMin(f,:) = min(currentTrial((EventsCurrentTrial(2,1):EventsCurrentTrial(4,1)),:));
+ 
+ j = j + 6;
+ f = f + 1; %Repeat for the next file
+ w = w + 1;
+ p = p + 1;
+ pem = pem+6;
+
+end
+
+%% Average 3 trials in masterEM
+z = 1;
+y = 1;
+for y = 1:numParticipants
+aveMasterEM(y,:) = mean(masterEM(z:z+2,:),1); 
+z= z+3;
+y=y+1;
+end
+
+
+%% Average Peaks 
+z = 1;
+y = 1;
+for y = 1:numParticipants
+avePeaksMax(y,:) = mean(peaksMax(z:z+2,:),1); 
+z= z+3;
+y=y+1;
+end
+
+z = 1;
+y = 1;
+for y = 1:numParticipants
+avePeaksMin(y,:) = mean(peaksMin(z:z+2,:),1); 
+z= z+3;
+y=y+1;
+end
+
+totalAvePeaks = [avePeaksMax avePeaksMin];
